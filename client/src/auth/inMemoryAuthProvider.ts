@@ -48,10 +48,10 @@ export class InMemoryAuthProvider implements AuthProvider {
         return Promise.resolve(Sign(this.masterkey, data))
     }
 
-    signSub(data: string): Promise<string> {
-        if (!this.subkey) {
+    signSub(data: string): Promise<[string, string]> {
+        if (!this.subkey || !this.ckid) {
             throw new Error('Sub key not available')
         }
-        return Promise.resolve(Sign(this.subkey, data))
+        return Promise.resolve([Sign(this.subkey, data), this.ckid])
     }
 }

@@ -39,6 +39,7 @@ export interface Policy {
 export interface Proof {
     type: string
     signature: string
+    key?: string
 }
 
 export interface SignedDocument {

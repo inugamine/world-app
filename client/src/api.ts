@@ -83,7 +83,7 @@ export class Api {
         const body = this.makeUrlSafe(btoa(header) + '.' + btoa(payload))
         const bodyHash = keccak256(new TextEncoder().encode(body)).slice(2)
 
-        const hexSig = await this.authProvider.signSub(bodyHash)
+        const [hexSig, _] = await this.authProvider.signSub(bodyHash)
 
         const r = hexSig.slice(0, 64)
         const s = hexSig.slice(64, 128)
@@ -557,15 +557,24 @@ export class Api {
 
     async commit<T>(document: Document<T>, domain?: string, opts?: { useMasterkey: boolean }): Promise<void> {
         const docString = JSON.stringify(document)
-        const signature = opts?.useMasterkey
-            ? await this.authProvider.signMaster(docString)
-            : await this.authProvider.signSub(docString)
-
-        const signedDoc = {
-            document: docString,
-            proof: {
-                type: 'concrnt-ecrecover-direct',
-                signature: signature
+        let signedDoc: Partial<SignedDocument> | undefined
+        if (opts?.useMasterkey) {
+            signedDoc = {
+                document: docString,
+                proof: {
+                    type: 'concrnt-ecrecover-direct',
+                    signature: await this.authProvider.signMaster(docString)
+                }
+            }
+        } else {
+            const [signature, keyid] = await this.authProvider.signSub(docString)
+            signedDoc = {
+                document: docString,
+                proof: {
+                    type: 'concrnt-ecrecover-subkey',
+                    signature: signature,
+                    key: `cckv://${this.authProvider.getCCID()}/keys/${keyid}`
+                }
             }
         }
 

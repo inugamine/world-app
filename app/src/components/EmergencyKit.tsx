@@ -10,8 +10,8 @@ export function EmergencyKit({ error }: FallbackProps): ReactNode {
             }}
         >
             <pre style={{ whiteSpace: 'pre-wrap' }}>
-                Error: {error?.message}
-                Stack: {error?.stack}
+                Error: {(error as any)?.message}
+                Stack: {(error as any)?.stack}
             </pre>
         </div>
     )

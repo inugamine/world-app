@@ -3,5 +3,5 @@ export interface AuthProvider {
     getCKID: () => string | undefined
 
     signMaster(data: string): Promise<string>
-    signSub(data: string): Promise<string>
+    signSub(data: string): Promise<[string, string]> // [signature, ckid]
 }

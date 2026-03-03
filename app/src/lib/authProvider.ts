@@ -44,7 +44,7 @@ export class TauriAuthProvider implements AuthProvider {
         return invoke<string>('sign_masterkey', { payload: data })
     }
 
-    signSub(data: string): Promise<string> {
-        return invoke<string>('sign_subkey', { payload: data })
+    signSub(data: string): Promise<[string, string]> {
+        return invoke<[string, string]>('sign_subkey', { payload: data })
     }
 }
