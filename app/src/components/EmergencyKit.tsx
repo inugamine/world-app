@@ -9,6 +9,18 @@ export function EmergencyKit({ error }: FallbackProps): ReactNode {
                 marginBottom: 'env(safe-area-inset-bottom)'
             }}
         >
+            <button
+                style={{
+                    width: '100%',
+                    padding: '1em',
+                    fontSize: '1.5em'
+                }}
+                onClick={() => {
+                    location.reload()
+                }}
+            >
+                Reload
+            </button>
             <pre style={{ whiteSpace: 'pre-wrap' }}>
                 Error: {(error as any)?.message}
                 Stack: {(error as any)?.stack}
