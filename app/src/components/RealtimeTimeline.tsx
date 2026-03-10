@@ -69,6 +69,7 @@ export const RealtimeTimeline = (props: Props) => {
                             uri={item.href}
                             source={item.source}
                             lastUpdated={item.lastUpdate?.getTime() ?? 0}
+                            content={item.content}
                         />
                     </div>
                     <Divider />

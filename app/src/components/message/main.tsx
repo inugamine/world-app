@@ -6,44 +6,52 @@ import { Text } from '@concrnt/ui'
 import { Message, Schemas } from '@concrnt/worldlib'
 import { MarkdownMessage } from './MarkdownMessage'
 import { LikeAssociation } from './LikeAssociation'
+import { LegacyNoteMessage } from './legacy/note'
 
 interface Props {
-    uri: string
+    uri?: string
     source?: string
     lastUpdated?: number
+    content?: string
 }
 
 export const MessageContainer = (props: Props): ReactNode | null => {
     const { client } = useClient()
 
     const messagePromise = useMemo(() => {
-        console.log('Fetching message', props.uri)
-
-        const fetchHint = async () => {
-            let hint: string | undefined = undefined
-            try {
-                if (props.source) {
-                    const { owner } = parseCCURI(props.source)
-                    if (IsCCID(owner)) {
-                        const user = await client?.getUser(owner)
-                        if (user) {
-                            hint = user.domain
+        console.log('Fetching message', props.uri, props.content)
+        if (props.uri) {
+            const fetchHint = async () => {
+                let hint: string | undefined = undefined
+                try {
+                    if (props.source) {
+                        const { owner } = parseCCURI(props.source)
+                        if (IsCCID(owner)) {
+                            const user = await client?.getUser(owner)
+                            if (user) {
+                                hint = user.domain
+                            }
+                        } else {
+                            hint = owner
                         }
-                    } else {
-                        hint = owner
                     }
+                } catch (e) {
+                    console.error('Failed to resolve hint for message', e)
                 }
-            } catch (e) {
-                console.error('Failed to resolve hint for message', e)
+
+                return hint
             }
 
-            return hint
+            return fetchHint().then((hint) => {
+                return client!.getMessage<any>(props.uri!, hint).catch(() => undefined)
+            })
+        } else if (props.content) {
+            // If no URI is provided, we can create a temporary message object from the content
+            return Promise.resolve(JSON.parse(props.content))
+        } else {
+            return Promise.resolve(undefined)
         }
-
-        return fetchHint().then((hint) => {
-            return client!.getMessage<any>(props.uri, hint).catch(() => undefined)
-        })
-    }, [client, props.uri, props.source, props.lastUpdated])
+    }, [client, props.uri, props.source, props.content, props.lastUpdated])
 
     return (
         <Suspense fallback={<div>Loading message...</div>}>
@@ -66,6 +74,8 @@ const MessageContainerInner = (props: InnerProps) => {
             return <MarkdownMessage message={message} />
         case Schemas.likeAssociation:
             return <LikeAssociation message={message} />
+        case 'https://raw.githubusercontent.com/totegamma/concurrent-schemas/master/messages/note/0.0.1.json':
+            return <LegacyNoteMessage message={message} />
         default:
             return (
                 <div>
