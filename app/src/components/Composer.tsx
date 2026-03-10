@@ -75,7 +75,7 @@ export const Composer = (props: Props) => {
         if (!client) return
 
         const homeTimeline = `cckv://${client.ccid}/concrnt.world/main/home-timeline`
-        const activityTimeline = `cckv://${client.ccid}/concrnt.world/main/activity-timeline`
+        // const activityTimeline = `cckv://${client.ccid}/concrnt.world/main/activity-timeline`
         const distributes = [...(postHome ? [homeTimeline] : []), ...props.destinations]
 
         try {
@@ -86,11 +86,6 @@ export const Composer = (props: Props) => {
                         setWillClose(true)
                         return
                     }
-
-                    const targetAuthorDomain = await client
-                        .getUser(props.targetMessage.author)
-                        .then((user) => user?.domain)
-                    const notifyTimeline = `cckv://${props.targetMessage.author}/concrnt.world/main/notify-timeline`
 
                     // リプライメッセージを作成
                     const key = Date.now().toString()
@@ -112,6 +107,12 @@ export const Composer = (props: Props) => {
                     console.log('Reply result:', replyResult)
 
                     // リプライアソシエーションを作成
+                    /*
+                    const targetAuthorDomain = await client
+                        .getUser(props.targetMessage.author)
+                        .then((user) => user?.domain)
+                    const notifyTimeline = `cckv://${props.targetMessage.author}/concrnt.world/main/notify-timeline`
+
                     const associationDocument = {
                         author: client.ccid,
                         schema: Schemas.replyAssociation,
@@ -127,6 +128,7 @@ export const Composer = (props: Props) => {
                     console.log('Submitting reply association:', associationDocument)
                     await client.api.commit(associationDocument, targetAuthorDomain)
                     console.log('Reply association submitted')
+                    */
                     break
                 }
                 case 'reroute': {
@@ -135,11 +137,6 @@ export const Composer = (props: Props) => {
                         setWillClose(true)
                         return
                     }
-
-                    const targetAuthorDomain = await client
-                        .getUser(props.targetMessage.author)
-                        .then((user) => user?.domain)
-                    const notifyTimeline = `cckv://${props.targetMessage.author}/concrnt.world/main/notify-timeline`
 
                     // リルートメッセージを作成
                     const key = Date.now().toString()
@@ -160,6 +157,12 @@ export const Composer = (props: Props) => {
                     console.log('Reroute result:', rerouteResult)
 
                     // リルートアソシエーションを作成
+                    /*
+                    const targetAuthorDomain = await client
+                        .getUser(props.targetMessage.author)
+                        .then((user) => user?.domain)
+                    const notifyTimeline = `cckv://${props.targetMessage.author}/concrnt.world/main/notify-timeline`
+
                     const associationDocument = {
                         author: client.ccid,
                         schema: Schemas.rerouteAssociation,
@@ -175,6 +178,7 @@ export const Composer = (props: Props) => {
                     console.log('Submitting reroute association:', associationDocument)
                     await client.api.commit(associationDocument, targetAuthorDomain)
                     console.log('Reroute association submitted')
+                    */
                     break
                 }
                 default: {
