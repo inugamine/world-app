@@ -9,6 +9,8 @@ export interface TimelineItemWithUpdate extends ChunklineItem {
 
 export class TimelineReader {
     body: TimelineItemWithUpdate[] = []
+    chunkedBody: TimelineItemWithUpdate[][] = []
+
     onUpdate?: () => void
     onNewItem?: (item: ChunklineItem) => void
     socket?: Socket
@@ -48,6 +50,7 @@ export class TimelineReader {
                     lastUpdate: new Date()
                 }
                 this.body.unshift(itemWithUpdate)
+                this.chunkedBody.unshift([itemWithUpdate])
                 this.onUpdate?.()
                 break
             }
@@ -78,6 +81,7 @@ export class TimelineReader {
             .then((items: ChunklineItem[]) => {
                 const itemsWithUpdate = items.map((item) => Object.assign(item, { lastUpdate: new Date() }))
                 this.body = itemsWithUpdate
+                this.chunkedBody = [itemsWithUpdate]
                 if (items.length < 16) {
                     hasMore = false
                 }
@@ -87,6 +91,7 @@ export class TimelineReader {
                 console.error('Failed to load timeline:', err)
                 hasMore = false
                 this.body = []
+                this.chunkedBody = []
                 this.onUpdate?.()
             })
 
@@ -99,10 +104,11 @@ export class TimelineReader {
         if (this.body.length === 0) return false
         const last = this.body[this.body.length - 1]
         const items = await this.api.getTimelineRanged(this.timelines, { until: last.timestamp }, this.hostOverride)
-        const newdata = items.filter((item) => !this.body.find((i) => i.href === item.href))
+        const newdata = items.filter((item) => !this.body.find((i) => i.timestamp === item.timestamp))
         const newdataWithUpdate = newdata.map((item) => Object.assign(item, { lastUpdate: new Date() }))
         if (newdata.length === 0) return false
         this.body = this.body.concat(newdataWithUpdate)
+        this.chunkedBody.push(newdataWithUpdate)
         this.onUpdate?.()
         return true
     }
@@ -113,6 +119,7 @@ export class TimelineReader {
         const items = await this.api.getTimelineRecent(this.timelines)
         const itemsWithUpdate = items.map((item) => Object.assign(item, { lastUpdate: new Date() }))
         this.body = itemsWithUpdate
+        this.chunkedBody = [itemsWithUpdate]
         if (items.length < 16) {
             hasMore = false
         }

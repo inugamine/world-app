@@ -1,10 +1,11 @@
-import { Fragment, useEffect, useImperativeHandle, useRef } from 'react'
+import { Fragment, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { ScrollViewProps } from '../types/ScrollView'
 import { useClient } from '../contexts/Client'
 import { useRefWithUpdate } from '../hooks/useRefWithUpdate'
 import { TimelineReader } from '@concrnt/client'
 import { MessageContainer } from './message'
 import { Divider } from '@concrnt/ui'
+import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 
 interface Props extends ScrollViewProps {
     timelines: string[]
@@ -13,6 +14,8 @@ interface Props extends ScrollViewProps {
 export const RealtimeTimeline = (props: Props) => {
     const { client } = useClient()
 
+    // eslint-disable-next-line prefer-const
+    let [loading, setLoading] = useState(true)
     const [reader, update] = useRefWithUpdate<TimelineReader | undefined>(undefined)
 
     useEffect(() => {
@@ -27,7 +30,10 @@ export const RealtimeTimeline = (props: Props) => {
                 }
 
                 reader.current = t
-                t.listen(props.timelines)
+                t.listen(props.timelines).finally(() => {
+                    // eslint-disable-next-line react-hooks/immutability
+                    setLoading((loading = false))
+                })
                 return t
             })
         }
@@ -50,6 +56,37 @@ export const RealtimeTimeline = (props: Props) => {
         }
     }))
 
+    useEffect(() => {
+        const el = scrollRef.current
+        if (!el) return
+
+        const handleScroll = () => {
+            if (el.scrollHeight - el.scrollTop - el.clientHeight < 100) {
+                if (loading) return
+                if (!reader.current) return
+
+                console.log('Reading more...')
+
+                setLoading((loading = true))
+                reader.current
+                    ?.readMore()
+                    .finally(() => {
+                        setLoading((loading = false))
+                        console.log('Finished reading more')
+                    })
+                    .catch((e) => {
+                        console.error('Failed to read more', e)
+                        console.log(reader.current?.body[reader.current.body.length - 1])
+                    })
+            }
+        }
+
+        el.addEventListener('scroll', handleScroll)
+        return () => {
+            el.removeEventListener('scroll', handleScroll)
+        }
+    }, [scrollRef])
+
     return (
         <div
             style={{
@@ -62,7 +99,40 @@ export const RealtimeTimeline = (props: Props) => {
             }}
             ref={scrollRef}
         >
-            {reader.current?.body.map((item) => (
+            <ErrorBoundary FallbackComponent={renderError}>
+                {reader.current?.chunkedBody.map((chunk, i) => (
+                    <div key={i}>
+                        <ErrorBoundary FallbackComponent={renderError}>
+                            <div
+                                style={{
+                                    padding: '8px',
+                                    fontSize: '12px',
+                                    color: '#888',
+                                    textAlign: 'center'
+                                }}
+                            >
+                                {i}
+                            </div>
+                            {chunk.map((item) => (
+                                <Fragment key={item.timestamp.getTime() ?? item.href}>
+                                    <ErrorBoundary FallbackComponent={renderError}>
+                                        <div style={{ padding: '0 8px' }}>
+                                            <MessageContainer
+                                                uri={item.href}
+                                                source={item.source}
+                                                lastUpdated={item.lastUpdate?.getTime() ?? 0}
+                                                content={item.content}
+                                            />
+                                        </div>
+                                    </ErrorBoundary>
+                                    <Divider />
+                                </Fragment>
+                            ))}
+                        </ErrorBoundary>
+                    </div>
+                ))}
+
+                {/*reader.current?.body.map((item) => (
                 <Fragment key={item.href}>
                     <div style={{ padding: '0 8px' }}>
                         <MessageContainer
@@ -74,7 +144,17 @@ export const RealtimeTimeline = (props: Props) => {
                     </div>
                     <Divider />
                 </Fragment>
-            ))}
+            ))*/}
+            </ErrorBoundary>
+        </div>
+    )
+}
+
+const renderError = ({ error }: FallbackProps) => {
+    return (
+        <div>
+            {(error as any)?.message}
+            <pre>{(error as any)?.stack}</pre>
         </div>
     )
 }

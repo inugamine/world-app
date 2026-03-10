@@ -4,7 +4,6 @@ import { fetchWithTimeout, makeUrlSafe, parseHexString, renderUriTemplate, btoa 
 import { CCID, CSID, FQDN, IsCCID, IsCSID, Document, SignedDocument } from './model'
 import { ChunklineItem } from './chunkline'
 import { CheckJwtIsValid, JwtPayload } from './crypto'
-import { keccak256 } from 'ethers'
 
 export class ServerOfflineError extends Error {
     constructor(server: string) {
@@ -607,7 +606,7 @@ export class Api {
     async getTimelineRecent(timelines: string[]): Promise<ChunklineItem[]> {
         const requestPath = `/api/v1/timeline/recent?uris=${timelines.join(',')}`
         const resp = await this.fetchWithCredential<ChunklineItem[]>(this.defaultHost, requestPath)
-        return resp
+        return resp.map((item) => ({ ...item, timestamp: new Date(item.timestamp) }))
     }
 
     async getTimelineRanged(
@@ -620,7 +619,7 @@ export class Api {
 
         const requestPath = `/api/v1/timeline/recent?uris=${timelines.join(',')}${sinceQuery}${untilQuery}`
         const resp = await this.fetchWithCredential<ChunklineItem[]>(host ?? this.defaultHost, requestPath)
-        return resp
+        return resp.map((item) => ({ ...item, timestamp: new Date(item.timestamp) }))
     }
 }
 
