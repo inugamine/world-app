@@ -8,6 +8,8 @@ import { MarkdownMessage } from './MarkdownMessage'
 import { ReplyMessage } from './ReplyMessage'
 import { RerouteMessage } from './RerouteMessage'
 import { LikeAssociation } from './LikeAssociation'
+import { ReplyAssociation } from './ReplyAssociation'
+import { RerouteAssociation } from './RerouteAssociation'
 
 interface Props {
     uri: string
@@ -72,6 +74,10 @@ const MessageContainerInner = (props: InnerProps) => {
             return <RerouteMessage message={message} />
         case Schemas.likeAssociation:
             return <LikeAssociation message={message} />
+        case Schemas.replyAssociation:
+            return <ReplyAssociation message={message} />
+        case Schemas.rerouteAssociation:
+            return <RerouteAssociation message={message} />
         default:
             return (
                 <div>
