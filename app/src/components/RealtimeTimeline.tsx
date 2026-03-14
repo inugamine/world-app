@@ -100,8 +100,25 @@ export const RealtimeTimeline = (props: Props) => {
             ref={scrollRef}
         >
             {reader.current?.chunkedBody.map((chunk, i) => (
-                <div key={i}>
-                    <Suspense fallback={<div>Loading...</div>}>
+                <div key={chunk[0].timestamp.getTime()}>
+                    <Suspense
+                        fallback={
+                            <div
+                                style={{
+                                    padding: '8px',
+                                    fontSize: '12px',
+                                    color: '#888',
+                                    width: '100%',
+                                    height: '100px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                Loading...
+                            </div>
+                        }
+                    >
                         <div
                             style={{
                                 padding: '8px',

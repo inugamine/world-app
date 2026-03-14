@@ -201,7 +201,7 @@ export class Client {
             return cached.data
         }
 
-        const msg = Message.load<T>(this, uri, hint).catch(() => null)
+        const msg = Message.load<T>(this, uri, hint)
         this.messageCache[uri] = {
             data: msg,
             expire: Date.now() + cacheLifetime
