@@ -1,9 +1,8 @@
-import { ReactNode, Suspense, use, useDeferredValue, useMemo } from 'react'
-import { IsCCID, parseCCURI } from '@concrnt/client'
+import { ReactNode, use } from 'react'
 
 import { useClient } from '../../contexts/Client'
 import { Text } from '@concrnt/ui'
-import { Message, Schemas } from '@concrnt/worldlib'
+import { Schemas } from '@concrnt/worldlib'
 import { MarkdownMessage } from './MarkdownMessage'
 import { ReplyMessage } from './ReplyMessage'
 import { RerouteMessage } from './RerouteMessage'
@@ -20,54 +19,10 @@ interface Props {
 export const MessageContainer = (props: Props): ReactNode | null => {
     const { client } = useClient()
 
-    const messagePromise = useMemo(() => {
-        console.log('Fetching message', props.uri, props.content)
-        if (props.uri) {
-            const fetchHint = async () => {
-                let hint: string | undefined = undefined
-                try {
-                    if (props.source) {
-                        const { owner } = parseCCURI(props.source)
-                        if (IsCCID(owner)) {
-                            const user = await client?.getUser(owner)
-                            if (user) {
-                                hint = user.domain
-                            }
-                        } else {
-                            hint = owner
-                        }
-                    }
-                } catch (e) {
-                    console.error('Failed to resolve hint for message', e)
-                }
+    if (!client) return <div>Loading...</div>
+    if (!props.uri && !props.content) return <div>No message specified</div>
 
-                return hint
-            }
-
-            return fetchHint().then((hint) => {
-                return client!.getMessage<any>(props.uri!, hint).catch(() => undefined)
-            })
-        } else if (props.content) {
-            // If no URI is provided, we can create a temporary message object from the content
-            return Promise.resolve(JSON.parse(props.content))
-        } else {
-            return Promise.resolve(undefined)
-        }
-    }, [client, props.uri, props.source, props.content, props.lastUpdated])
-
-    return (
-        <Suspense fallback={<div>Loading message...</div>}>
-            {useDeferredValue(<MessageContainerInner messagePromise={messagePromise} />)}
-        </Suspense>
-    )
-}
-
-interface InnerProps {
-    messagePromise: Promise<any>
-}
-
-const MessageContainerInner = (props: InnerProps) => {
-    const message: Message<any> = use(props.messagePromise)
+    const message = props.content ? JSON.parse(props.content) : use(client.getMessage<any>(props.uri!))
 
     if (!message) return <div>Message not found</div>
 

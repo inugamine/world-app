@@ -47,6 +47,12 @@ export class Api {
     negativeCacheTTL: number = 300
     tokens: Record<string, string> = {}
 
+    onResourceUpdated?: (id: string) => void
+
+    notifyResourceUpdate(id: string) {
+        this.onResourceUpdated?.(id)
+    }
+
     private inFlightRequests = new Map<string, Promise<any>>()
 
     constructor(host: string, authProvider: AuthProvider, cache: KVS) {
