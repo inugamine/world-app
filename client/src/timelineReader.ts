@@ -72,6 +72,7 @@ export class TimelineReader {
     }
 
     async listen(timelines: string[]): Promise<boolean> {
+        console.log('Listen!!!!!!!!!!!!!!!!!!!!!!!!')
         this.timelines = timelines
 
         let hasMore = true
@@ -80,8 +81,8 @@ export class TimelineReader {
             .getTimelineRecent(timelines)
             .then((items: ChunklineItem[]) => {
                 const itemsWithUpdate = items.map((item) => Object.assign(item, { lastUpdate: new Date() }))
-                this.body = itemsWithUpdate
-                this.chunkedBody = [itemsWithUpdate]
+                this.body = [...itemsWithUpdate]
+                this.chunkedBody = [[...itemsWithUpdate]]
                 if (items.length < 16) {
                     hasMore = false
                 }
@@ -101,11 +102,15 @@ export class TimelineReader {
     }
 
     async readMore(): Promise<boolean> {
+        console.log('Read more!!!!!!!!!!!!!!!!!!!!!!!!')
         if (this.body.length === 0) return false
         const last = this.body[this.body.length - 1]
         const items = await this.api.getTimelineRanged(this.timelines, { until: last.timestamp }, this.hostOverride)
-        const newdata = items.filter((item) => !this.body.find((i) => i.timestamp === item.timestamp))
+        const newdata = items.filter(
+            (item) => !this.body.find((i) => i.timestamp.getTime() === item.timestamp.getTime())
+        )
         const newdataWithUpdate = newdata.map((item) => Object.assign(item, { lastUpdate: new Date() }))
+        console.log(`Read more: ${newdata.length} new items`)
         if (newdata.length === 0) return false
         this.body = this.body.concat(newdataWithUpdate)
         this.chunkedBody.push(newdataWithUpdate)
@@ -114,6 +119,7 @@ export class TimelineReader {
     }
 
     async reload(): Promise<boolean> {
+        console.log('Reload!!!!!!!!!!!!!!!!!!!!!!!!')
         let hasMore = true
         this.haltUpdate = true
         const items = await this.api.getTimelineRecent(this.timelines)

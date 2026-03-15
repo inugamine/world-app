@@ -1,10 +1,10 @@
-import { Fragment, Suspense, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { Fragment, startTransition, Suspense, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { ScrollViewProps } from '../types/ScrollView'
 import { useClient } from '../contexts/Client'
 import { useRefWithUpdate } from '../hooks/useRefWithUpdate'
 import { TimelineReader } from '@concrnt/client'
 import { MessageContainer } from './message'
-import { Divider } from '@concrnt/ui'
+import { Divider, Text } from '@concrnt/ui'
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
 
 interface Props extends ScrollViewProps {
@@ -19,6 +19,7 @@ export const RealtimeTimeline = (props: Props) => {
     const [reader, update] = useRefWithUpdate<TimelineReader | undefined>(undefined)
 
     useEffect(() => {
+        console.log('Initializing timeline reader for timelines:', props.timelines)
         let isCancelled = false
         const request = async () => {
             if (!client) return
@@ -101,6 +102,7 @@ export const RealtimeTimeline = (props: Props) => {
         >
             {reader.current?.chunkedBody.map((chunk, i) => (
                 <div key={chunk[0].timestamp.getTime()}>
+                    <Text>{chunk[0].timestamp.getTime()}</Text>
                     <Suspense
                         fallback={
                             <div
