@@ -1,4 +1,4 @@
-import { Fragment, startTransition, Suspense, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { Fragment, Suspense, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { ScrollViewProps } from '../types/ScrollView'
 import { useClient } from '../contexts/Client'
 import { useRefWithUpdate } from '../hooks/useRefWithUpdate'
