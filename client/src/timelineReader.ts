@@ -101,13 +101,13 @@ export class TimelineReader {
         return hasMore
     }
 
-    async readMore(): Promise<boolean> {
+    async readMore(limit: number = 4): Promise<boolean> {
         console.log('Read more!!!!!!!!!!!!!!!!!!!!!!!!')
         if (this.body.length === 0) return false
         const last = this.body[this.body.length - 1]
         const items = await this.api.getTimelineRanged(
             this.timelines,
-            { until: last.timestamp, limit: 4 },
+            { until: last.timestamp, limit: limit },
             this.hostOverride
         )
         const newdata = items.filter(

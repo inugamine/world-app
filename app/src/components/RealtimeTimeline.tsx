@@ -62,7 +62,7 @@ export const RealtimeTimeline = (props: Props) => {
         if (!el) return
 
         const handleScroll = () => {
-            if (el.scrollHeight - el.scrollTop - el.clientHeight < 100) {
+            if (el.scrollHeight - el.scrollTop - el.clientHeight < 500) {
                 if (loading) return
                 if (!reader.current) return
 
@@ -70,7 +70,7 @@ export const RealtimeTimeline = (props: Props) => {
 
                 setLoading((loading = true))
                 reader.current
-                    ?.readMore()
+                    ?.readMore(8)
                     .finally(() => {
                         setLoading((loading = false))
                         console.log('Finished reading more')
@@ -100,55 +100,42 @@ export const RealtimeTimeline = (props: Props) => {
             }}
             ref={scrollRef}
         >
-            {reader.current?.chunkedBody.map((chunk, i) => (
-                <div key={chunk[0].timestamp.getTime()}>
-                    <Text>{chunk[0].timestamp.getTime()}</Text>
-                    <Suspense
-                        fallback={
+            {reader.current?.body.map((item) => (
+                <Fragment key={item.timestamp.getTime() ?? item.href}>
+                    <ErrorBoundary FallbackComponent={renderError}>
+                        <Suspense fallback={<Text>Loading...</Text>}>
                             <div
                                 style={{
-                                    padding: '8px',
-                                    fontSize: '12px',
-                                    color: '#888',
-                                    width: '100%',
-                                    height: '100px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
+                                    padding: '0 8px',
+                                    contentVisibility: 'auto'
                                 }}
                             >
-                                Loading...
+                                <MessageContainer
+                                    uri={item.href}
+                                    source={item.source}
+                                    lastUpdated={item.lastUpdate?.getTime() ?? 0}
+                                    content={item.content}
+                                />
                             </div>
-                        }
-                    >
-                        <div
-                            style={{
-                                padding: '8px',
-                                fontSize: '12px',
-                                color: '#888',
-                                textAlign: 'center'
-                            }}
-                        >
-                            {i}
-                        </div>
-                        {chunk.map((item) => (
-                            <Fragment key={item.timestamp.getTime() ?? item.href}>
-                                <ErrorBoundary FallbackComponent={renderError}>
-                                    <div style={{ padding: '0 8px' }}>
-                                        <MessageContainer
-                                            uri={item.href}
-                                            source={item.source}
-                                            lastUpdated={item.lastUpdate?.getTime() ?? 0}
-                                            content={item.content}
-                                        />
-                                    </div>
-                                </ErrorBoundary>
-                                <Divider />
-                            </Fragment>
-                        ))}
-                    </Suspense>
-                </div>
+                        </Suspense>
+                    </ErrorBoundary>
+                    <Divider />
+                </Fragment>
             ))}
+            <div
+                style={{
+                    padding: '8px',
+                    fontSize: '12px',
+                    color: '#888',
+                    width: '100%',
+                    height: '100px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}
+            >
+                Loading...
+            </div>
         </div>
     )
 }
